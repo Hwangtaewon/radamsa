@@ -28,7 +28,7 @@ radamsa.fasl: rad/*.scm bin/ol
 	bin/ol -o radamsa.fasl rad/main.scm
 
 ol-$(OWLVER).c:
-	test -f ol-$(OWLVER).c.gz || wget $(OWLURL)/ol-$(OWLVER).c.gz
+	test -f ol-$(OWLVER).c.gz || wget $(OWLURL)/ol-$(OWLVER).c.gz || curl -L0 $(OWLURL)/ol-$(OWLVER).c.gz > ol-$(OWLVER).c.gz
 	gzip -d < ol-$(OWLVER).c.gz > ol-$(OWLVER).c
 	
 bin/ol: ol-$(OWLVER).c
