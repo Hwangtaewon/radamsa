@@ -46,6 +46,9 @@ clean:
 	-rm radamsa.c bin/radamsa .seal-of-quality
 	-rm bin/ol $(OWL).c.gz $(OWL).c
 
+mrproper: clean
+	-rm -rf ol-*
+
 test: .seal-of-quality
 
 fasltest: radamsa.fasl
@@ -77,4 +80,4 @@ uninstall:
 	rm $(DESTDIR)$(PREFIX)/bin/radamsa || echo "no radamsa"
 	rm $(DESTDIR)$(PREFIX)/share/man/man1/radamsa.1.gz || echo "no manpage"
 
-.PHONY: todo you install clean test bytecode uninstall get-owl standalone
+.PHONY: todo you install clean mrproper test bytecode uninstall get-owl standalone
