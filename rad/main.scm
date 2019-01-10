@@ -42,7 +42,7 @@
 "Radamsa is a general purpose fuzzer. It modifies given sample data 
 in ways, which might expose errors in programs intended to process 
 the data. For more information, read the fine manual page, or visit
-https://github.com/aoh/radamsa.
+https://gitlab.com/akihe/radamsa.
 
 Radamsa was written by Aki Helin, initially at OUSPG.")
 
