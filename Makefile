@@ -43,7 +43,7 @@ install: bin/radamsa
 clean:
 	-rm -rf owl-lisp
 	-rm radamsa.c bin/radamsa .seal-of-quality
-	-rm bin/ol $(OWL).c.gz $(OWL).c
+	-rm bin/ol ol.c.gz ol.c
 
 mrproper: clean
 	-rm -rf ol-*
