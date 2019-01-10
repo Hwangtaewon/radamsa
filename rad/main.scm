@@ -24,7 +24,7 @@
 
       (define (string->count str)
          (cond
-            ((mem equal? '("inf" "infinity" "-1" "forever") str)
+            ((member str '("inf" "infinity" "-1" "forever"))
                'infinity)
             ((string->number str 10) =>
                (λ (n) 
@@ -124,7 +124,7 @@ Radamsa was written by Aki Helin, initially at OUSPG.")
          (define (verb n u)
             (if (or (< n 1024) (null? (cdr u)))
                (render n (render (car u) null))
-               (verb (div n 1024) (cdr u))))
+               (verb (quotient n 1024) (cdr u))))
          (list->string
             (verb n '("b" "K" "M" "T" "P"))))
 

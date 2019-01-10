@@ -64,7 +64,7 @@
             (if (eq? len 0)
                bvec
                (let loop ((pos (- len 1)) (out null))
-                  (let ((val (refb bvec pos)))
+                  (let ((val (ref bvec pos)))
                      (if (eq? pos edit-pos)
                         (if (eq? pos 0)
                            (list->byte-vector (fn val out))
@@ -271,10 +271,10 @@
       (define (split lst)
          (define (walk t h out)
             (if (null? h)
-               (values (╯°□°╯ out) t)
+               (values (reverse out) t)
                (let ((h (cdr h)))
                   (if (null? h)
-                     (values (╯°□°╯ out) t)
+                     (values (reverse out) t)
                      (walk (cdr t) (cdr h) (cons (car t) out))))))
          (walk lst lst null))
 
@@ -326,9 +326,9 @@
                (lets
                   ((rs start (rand-range rs 0 (- n 1)))
                    (rs end (rand-range rs (+ start 1) n))
-                   (pre (map (λ (p) (refb (car ll) p)) (iota 0 1 start)))
-                   (post (map (λ (p) (refb (car ll) p)) (iota end 1 (sizeb (car ll)))))
-                   (stut (list->byte-vector (map (λ (p) (refb (car ll) p)) (iota start 1 end))))
+                   (pre (map (λ (p) (ref (car ll) p)) (iota 0 1 start)))
+                   (post (map (λ (p) (ref (car ll) p)) (iota end 1 (sizeb (car ll)))))
+                   (stut (list->byte-vector (map (λ (p) (ref (car ll) p)) (iota start 1 end))))
                    (rs n (rand-log rs 10)) ; max 2^10 = 1024 stuts
                    (n (max 2 n))
                    (rs delta (rand-delta rs))
@@ -363,11 +363,11 @@
          (let loop ((lst (vector->list bvec)) (buff null) (out null))
             (if (null? lst)
                (if (null? buff)
-                  (╯°□°╯ out)
-                  (╯°□°╯ (cons (╯°□°╯ buff) out)))
+                  (reverse out)
+                  (reverse (cons (reverse buff) out)))
                (lets ((hd lst lst))
                   (if (eq? hd 10) ;; newline
-                     (loop lst null (cons (╯°□°╯ (cons 10 buff)) out))
+                     (loop lst null (cons (reverse (cons 10 buff)) out))
                      (loop lst (cons hd buff) out))))))
 
       ;; #u8[byte ...] → ((byte ... 10) ...) | #false, if this doesn't look like line-based text data
@@ -515,12 +515,12 @@
       ;; → lst tail-lst = did successfully parse up to close. ready node is lst, tail is following data
       (define (grow lst close rout)
          (if (null? lst)
-            (values (╯°□°╯ rout) #false) ;; out of data, didn't find close. return partial parse.
+            (values (reverse rout) #false) ;; out of data, didn't find close. return partial parse.
             (lets ((hd lst lst))
                (cond
                   ((eq? hd close)
                      ;; match complete, return with rest of list
-                     (values (╯°□°╯ (cons close rout)) lst))
+                     (values (reverse (cons close rout)) lst))
                   ((get usual-delims hd #false) =>
                      (λ (next-close)
                         (lets ((this lst (grow lst next-close null)))
@@ -528,7 +528,7 @@
                               (grow lst close (cons (cons hd this) rout))
                               ;; we ran out of data. this is a list of partial parses (having the data of
                               ;; lst after hd in some form) which we want to preserve as tail
-                              (values (append (╯°□°╯ rout) (cons hd this)) #false)))))
+                              (values (append (reverse rout) (cons hd this)) #false)))))
                   (else ;; add one byte to this node
                      (grow lst close (cons hd rout)))))))
 
@@ -559,7 +559,7 @@
             (if (null? subs)
                (values rs #false)
                (lets ((rs n (rand rs (length subs))))
-                  (values rs (lref subs n))))))
+                  (values rs (list-ref subs n))))))
 
       ;; replace the node (sub . tail) with (op (sub . tail))
       (define (edit-sublist lst sub op)
@@ -590,7 +590,7 @@
             (abort)
             (let loop ((lst lst) (rout null))
                (if (null? lst)
-                  (╯°□°╯ rout)
+                  (reverse rout)
                   (lets ((closep (get usual-delims (car lst) #false)))
                      (if closep
                         (lets
@@ -598,7 +598,7 @@
                             (this lst (grow (cdr lst) closep null)))
                            (if lst
                               (loop lst (cons (cons hd this) rout))
-                              (append (╯°□°╯ rout) (cons hd this))))
+                              (append (reverse rout) (cons hd this))))
                         (loop (cdr lst) (cons (car lst) rout))))))))
 
       (define (flatten node tl)
@@ -910,7 +910,7 @@
 
       (define (random-silly rs)
          (lets ((rs p (rand rs n-sillies)))
-            (values rs (lref silly-strings p))))
+            (values rs (list-ref silly-strings p))))
 
       (define (random-badness rs)
          (lets ((rs n (rand rs 20)))
@@ -975,7 +975,7 @@
 
       (define (string-mutate rs cs l)
          (lets ((rs p (rand rs l)))
-            (tuple-case (lref cs p)
+            (tuple-case (list-ref cs p)
                ((text bs)
                   (lets ((rs bs (mutate-text-data rs bs)))
                      (values rs (lset cs p (tuple 'text bs)))))
@@ -1110,9 +1110,6 @@
       (define (weighted-permutation rs pris)
          ;; show a sorted probability distribution 
          (stderr-probe
-             ;(lets ((probs (sort car> (map (λ (x) (cons (* (ref x 1) (ref x 2)) (ref x 4))) pris)))
-             ;       (all (fold + 0 (map car probs))))
-             ;      (print*-to stderr (list "probs: " (map (λ (node) (cons (floor (/ (* (car node) 100) all)) (cdr node))) probs))))
             (sort car> (map (λ (x) (cons (ref x 1) (ref x 4))) pris))
             (lets    
                ((rs ppris ; ((x . (pri . fn)) ...)
@@ -1175,7 +1172,7 @@
             ((ps (map c/=/ (c/,/ str))) ; ((name [priority-str]) ..)
              (ps (map selection->priority ps))
              (fs (map priority->fuzzer ps)))
-            (if (all self fs) 
+            (if (every self fs) 
                fs
                #false)))
 

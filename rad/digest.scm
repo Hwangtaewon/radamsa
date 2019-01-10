@@ -55,16 +55,16 @@
                ((a bs (uncons bs 0))
                 (b bs (uncons bs a))
                 (c bs (uncons bs b))
-                (_ a (fx<< a 16))
-                (_ b (fx<< b 8)))
+                (a (<< a 16))
+                (b (<< b 8)))
                (pair
                   (fxbor (fxbor a b) c)
                   (bs->trits bs)))))
 
       (define (trit a b c)
          (lets
-            ((_ a (fx<< a 16))
-             (_ b (fx<< b 8)))
+            ((a (<< a 16))
+             (b (<< b 8)))
             (fxbor (fxbor a b) c)))
              
       (define (get-trit ll)
@@ -88,8 +88,8 @@
             (else (get-trit (ll)))))
 
       (define (pollinate a b)
-         (lets ((ah a (fx<< a 3))
-                (bh b (fx<< b 3))
+         (lets ((ah a (fx>> a 21))
+                (bh b (fx>> b 21))
                 (a (fxbor a bh))
                 (b (fxbor b ah)))
             (values a b)))

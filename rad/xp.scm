@@ -342,7 +342,7 @@
             (let loop ((n n) (out null))
                (if (eq? n 0)
                   out
-                  (lets ((q r (quotrem n 10)))
+                  (lets ((q r (truncate/ n 10)))
                      (loop q (cons (+ r #\0) out)))))))
 
       (define (gennum n)
@@ -658,7 +658,7 @@
                (lets
                   ((rs start (pick-some rs opts)) ;; start node of path copying
                    (targets (ast-bytes-tags start))
-                   (targets (keep (λ (x) (not (eq? x start))) targets))) ;; don't target self (no changes)
+                   (targets (filter (λ (x) (not (eq? x start))) targets))) ;; don't target self (no changes)
                   (if (null? targets) ;; don't want to target closes or opens, could break too much structure
                      (values rs tags ns)
                      (lets 

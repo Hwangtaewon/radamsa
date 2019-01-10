@@ -193,7 +193,7 @@
          (lets
             ((ps (map c/=/ (c/,/ str))) ; ((name [priority-str]) ..)
              (ps (map selection->priority ps)))
-            (if (all self ps) ps #false)))
+            (if (every self ps) ps #false)))
 
       ;; ((pri . gen) ...) → (rs → gen output)
       (define (mux-generators gs)
@@ -210,7 +210,7 @@
          ;; → (priority . generator) | #false
          (λ (pri)
             (lets
-               ((paths (keep (λ (x) (not (equal? x "-"))) args))
+               ((paths (filter (λ (x) (not (equal? x "-"))) args))
                 (paths (if (null? paths) #false (list->vector paths))))
                (if pri
                   (lets ((name priority pri))
@@ -218,7 +218,7 @@
                         ((equal? name "stdin")
                            ;; a generator to read data from stdin
                            ;; check n and preread if necessary
-                           (if (first (λ (x) (equal? x "-")) args #false)
+                           (if (find (λ (x) (equal? x "-")) args)
                               ;; "-" was given, so start stdin generator + possibly preread
                               (cons priority
                                  (stdin-generator rs (eq? n 1)))
@@ -241,7 +241,7 @@
       (define (generator-priorities->generator rs pris args fail n)
          (lets 
             ((gs (map (priority->generator rs args fail n) pris))
-             (gs (keep self gs)))
+             (gs (filter self gs)))
             (cond
                ((null? gs) (fail "no generators"))
                ((null? (cdr gs)) (cdar gs))

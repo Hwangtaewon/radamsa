@@ -72,10 +72,10 @@
 
       (define (stream-chunk buff pos tail)
          (if (eq? pos 0)
-            (cons (refb buff pos) tail)
+            (cons (ref buff pos) tail)
             (lets ((next x (fx- pos 1)))
                (stream-chunk buff next
-                  (cons (refb buff pos) tail)))))
+                  (cons (ref buff pos) tail)))))
 
       (define (output-stream->byte-stream lst)
          (foldr 
@@ -129,7 +129,7 @@
       (define default-suffix (cdr (string->list default-path)))
 
       (define (suffix-char? x) 
-        (not (has? '(#\. #\/ #\\) x)))
+        (not (memq x '(#\. #\/ #\\))))
 
       (define (path-suffix path default) 
         (lets ((hd tl (take-while suffix-char? (reverse (string->list path)))))
@@ -303,8 +303,8 @@
                    (ss (c/\./ (car ip+port)))
                    (bs (map (λ (x) (string->number x 10)) ss)))
                   (cond
-                     ((not (and (all number? bs) 
-                                (all (λ (x) (< x 256)) bs)
+                     ((not (and (every number? bs) 
+                                (every (λ (x) (< x 256)) bs)
                                 (number? port)
                                 (< port 65536)))
                         (print-to stderr "Not a valid target: " str)

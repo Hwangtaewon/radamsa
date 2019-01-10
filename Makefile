@@ -4,8 +4,7 @@ BINDIR=/bin
 CFLAGS?=-Wall -O2
 LDFLAGS?=
 OFLAGS=-O2
-OWLVER=0.1.15
-OWLURL=https://github.com/aoh/owl-lisp/releases/download/v$(OWLVER)
+OWLURL=https://gitlab.com/owl-lisp/owl/uploads/87ffa9dad2bc59fc0ac5efcd90db4c7c/ol-0.1.16.c.gz
 USR_BIN_OL=/usr/bin/ol
 
 everything: bin/radamsa
@@ -27,13 +26,13 @@ radamsa.c: rad/*.scm
 radamsa.fasl: rad/*.scm bin/ol
 	bin/ol -o radamsa.fasl rad/main.scm
 
-ol-$(OWLVER).c:
-	test -f ol-$(OWLVER).c.gz || wget $(OWLURL)/ol-$(OWLVER).c.gz || curl -L0 $(OWLURL)/ol-$(OWLVER).c.gz > ol-$(OWLVER).c.gz
-	gzip -d < ol-$(OWLVER).c.gz > ol-$(OWLVER).c
-	
-bin/ol: ol-$(OWLVER).c
+ol.c:
+	test -f ol.c.gz || wget -O ol.c.gz $(OWLURL) || curl -L0 -l ol.c.gz $(OWLURL)
+	gzip -d < ol.c.gz > ol.c
+
+bin/ol: ol.c
 	mkdir -p bin
-	cc -O2 -o bin/ol ol-$(OWLVER).c
+	cc -O2 -o bin/ol ol.c
 
 install: bin/radamsa
 	-mkdir -p $(DESTDIR)$(PREFIX)/bin

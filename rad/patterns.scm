@@ -97,7 +97,7 @@
             ((ps (map c/=/ (c/,/ str))) ; ((name [priority-str]) ..)
              (ps (map selection->priority ps))
              (ps (map priority->pattern ps)))
-            (if (all self ps) 
+            (if (every self ps) 
                (mux-patterns ps)
                #false)))
 ))

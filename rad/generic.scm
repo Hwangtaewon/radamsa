@@ -48,7 +48,7 @@
                (lets
                   ((rs start (rand rs len))
                    (rs n (rand rs (- len start))) ;; <- could take min with rand-len
-                   (hd tl (split l start)))
+                   (hd tl (split-at l start)))
                   (values rs (append hd (drop tl n)))))))
 
       ;; duplicate a random element
@@ -91,7 +91,7 @@
                ((len (length l))
                 (rs from (rand rs len))
                 (rs to (rand rs len)))
-               (values rs (lins l to (lref l from))))))
+               (values rs (lins l to (list-ref l from))))))
 
       ;; swap two adjecent values 
       (define (list-swap rs l)
@@ -132,7 +132,7 @@
             (lets ((rs p (rand rs len)))
                (step-state rs 
                   (ilist (+ 1 (car st)) 
-                         (lref l p)
+                         (list-ref l p)
                          (cdr st))
                   l len))
             (lets 
@@ -141,14 +141,14 @@
                   ;; update a stored element
                   (lets
                      ((rs ep (rand rs len))
-                      (new (lref l ep))
-                      (st (edit st (+ 1 up) (λ (tl) (cons (lref l ep) (cdr tl)))))) ; +1 for len
+                      (new (list-ref l ep))
+                      (st (edit st (+ 1 up) (λ (tl) (cons (list-ref l ep) (cdr tl)))))) ; +1 for len
                      (values rs st))
                   (values rs st)))))
 
       (define (pick-state rs st)
          (lets ((rs p (rand rs (car st))))
-            (values rs (lref (cdr st) p))))
+            (values rs (list-ref (cdr st) p))))
 
       (define (st-list-ins rs st l)
          (lets
