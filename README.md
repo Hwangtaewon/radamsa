@@ -36,6 +36,7 @@ Software requirements for building from sources:
  * gcc / clang
  * make
  * git
+ * wget
 
 ## Building Radamsa
 ```
