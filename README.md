@@ -295,6 +295,7 @@ CVE-2016-9562 | SAP NetWeaver | @vah_13 (ERPScan)
 CVE-2017-5371 | SAP ASE OData | @vah_13 (ERPScan)
 CVE-2017-9843 | SAP NETWEAVER | @vah_13 (ERPScan)
 CVE-2017-9845 | SAP NETWEAVER | @vah_13 (ERPScan)
+[CVE-2018-0101](https://www.nccgroup.trust/globalassets/newsroom/uk/events/offensivecon2018-the-return-of-robin-hood-vs-cisco-asa.pdf) | Cisco ASA WebVPN/AnyConnect | @saidelike (NCC Group)
 
 We would like to thank the Chromium project and Mozilla for analyzing, fixing and reporting further many of the above mentioned issues, CERT-FI for feedback and disclosure handling, and other users, projects and vendors who have responsibly taken care of uncovered bugs.
 
