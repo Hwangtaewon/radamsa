@@ -15,7 +15,8 @@
       (rad digest)
       (rad patterns)
       (rad mutations)
-      (rad shared))
+      (rad shared)
+      (rad pcapng))
 
    (export 
       radamsa)
@@ -236,7 +237,9 @@ Radamsa was written by Aki Helin, initially at OUSPG.")
                   fail))
              (n (getf dict 'count))
              (end (if (number? n) (+ n (get dict 'offset 0)) n))
-             (mutas (getf dict 'mutations))
+             (mutas (if (pcapng-input? dict)
+	               (pcapng-instrument-mutations (getf dict 'mutations))
+                       (getf dict 'mutations)))
              (hash (getf dict 'hash))
              (checksummer 
                 ((if (eq? 0 (getf dict 'csums)) dummy-checksummer checksummer)

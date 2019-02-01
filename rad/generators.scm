@@ -9,7 +9,8 @@
       (owl sys)
       (rad shared)
       (rad fuse)
-      (only (owl primop) halt))
+      (only (owl primop) halt)
+      (rad pcapng))
 
    (export 
       string->generator-priorities         ;; done at cl args parsing time
@@ -58,6 +59,92 @@
                         (loop rs (merge last block)
                            (- wanted (sizeb block))
                            len)))))))
+
+      (define (pcapng-port->stream port)
+         (define (recognize-endianness block-header block-body default-endianness)
+            (let ((block-type (bytes->uint32 (take block-header 4))))
+               (if (and (equal? block-type #x0A0D0D0A) (>= (length block-body) 4))
+                  (let ((byte-order-magic (take block-body 4)))
+                     (cond 
+                        ((equal? byte-order-magic '(#x1A #x2B #x3C #x4D))
+                           ;; 'big-endian
+                           (print "pcapng-port->stream (recognize-endianness): big-endian is not supported")
+                           (fclose port)
+                           (halt 1))
+                        ((equal? byte-order-magic '(#x4D #x3C #x2B #x1A))
+                           'little-endian)
+                        (else
+                           (print "pcapng-port->stream (recognize-endianness): cannot recognize endianness")
+                           (print "expecting either " '(#x1A #x2B #x3C #x4D) " or " '(#x4D #x3C #x2B #x1A) ", found " byte-order-magic)
+                           (fclose port)
+                           (halt 1))))
+                  default-endianness)))
+         (define (read-block-header port)
+            (let ((block-header (get-block port 8)))
+               (cond 
+                  ((eof? block-header)
+                     (fclose port)
+                     null)
+                  ((eq? 8 (vector-length block-header))
+                     (vector->list block-header))
+                  (else
+                     (print "pcapng-port->stream: cannot read the initial 8 bytes of the current block")
+                     (fclose port)
+                     (halt 1)))))
+         (define (read-block-content port block-header)
+            (let* ((block-type (bytes->uint32 (take block-header 4)))
+                   (block-length (bytes->uint32 (drop block-header 4)))
+                   (block-content-length (- block-length 12))
+                   (block-content (get-block port block-content-length)))
+               (cond 
+                  ((eof? block-content)
+                     (print "pcapng-port->stream: cannot read block content, encountered end of file earlier than expected")
+                     (fclose port)
+                     (halt 2))
+                  ((eq? block-content-length (vector-length block-content))
+                     (vector->list block-content))
+                  (else
+                     (print "pcapng-port->stream: cannot read block content, received less than expected (length=" block-content-length ")")
+                     (fclose port)
+                     (halt 3)))))
+         (define (read-last-block-length port block-header)
+            (let ((expected-block-length (bytes->uint32 (drop block-header 4)))
+                  (last-block-length (get-block port 4)))
+               (cond 
+                  ((eof? last-block-length)
+                     (print "pcapng-port->stream:  cannot read last block length, encountered end of file earlier than expected")
+                     (fclose port)
+                     (halt 4))
+                  ((and (eq? 4 (vector-length last-block-length))
+                        (eq? expected-block-length (bytes->uint32 (vector->list last-block-length))))
+                     (vector->list last-block-length))
+                  (else
+                     (print "pcapng-port->stream:  bad last block length")
+                     (fclose port)
+                     (halt 5)))))
+         (define (read-next-block port endianness)
+            (let ((block-header (read-block-header port)))
+               (if (not (null? block-header))
+                  (let ((block-content (read-block-content port block-header)))
+                     (if (not (null? block-content))
+                        (let ((last-block-length (read-last-block-length port block-header)))
+                           (if (not (null? last-block-length))
+                              (values (list->byte-vector (append block-header (append block-content last-block-length)))
+                                 (recognize-endianness block-header block-content endianness)
+                                 (equal? '(#x06 #x00 #x00 #x00) (take block-header 4)))
+                              (values null endianness #false)))
+                        (values null endianness #false)))
+                  (values null endianness #false))))
+         (let loop ((endianness 'little-endian) (encountered-interesting-block #false))
+            (lets 
+               ((block endianness encountered-new-interesting-block (read-next-block port endianness)))
+               (if (not (null? block))
+                  (pair block (loop endianness (or encountered-interesting-block encountered-new-interesting-block)))
+                  (if encountered-interesting-block
+                     null
+                     (begin 
+                        (print "pcapng-port->stream: you must provide a file which has at least an EPB block to mutate!")
+                        (halt 6)))))))
 
       ;; rs port → rs' (bvec ...), closes port unless stdin
       (define (port->stream rs port)
@@ -119,6 +206,21 @@
                            (list->ff (list '(generator . file) (cons 'source path)))))
                      (fatal-read-error path))))
             gen))
+
+      (define (pcapng-streamer paths)
+         (define (gen rs)
+            (if (= (vec-len paths) 1)
+               (lets 
+                  ((path (vec-ref paths 0))
+                   (port (open-input-file path)))
+                  (if port
+                     (values rs (pcapng-port->stream port)
+                        (list->ff (list '(generator . pcapng) (cons 'source path))))
+                     (fatal-read-error path)))
+               (begin
+                  (print*-to stderr (list "pcapng-streamer: multiple pcapng files are not supported."))
+                  (halt 1))))
+         gen)
 
       (define (consume ll)
          (cond
@@ -227,6 +329,10 @@
                            (if paths
                               (cons priority (file-streamer paths))
                               #false))
+			((equal? name "pcapng")
+			   (if paths
+			      (cons priority (pcapng-streamer paths))
+			      #false))
                         ((equal? name "jump")
                            (if paths
                               (cons priority
