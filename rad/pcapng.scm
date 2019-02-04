@@ -43,15 +43,15 @@
         (+ (<< b3 24) (+ (<< b2 16) (+ (<< b1 8) b0)))))
 
     (define (uint32->bytes n)
-      (list (mod (>> n 0)  256)
-            (mod (>> n 8)  256)
-            (mod (>> n 16) 256)
-            (mod (>> n 24) 256)))
+      (list (modulo (>> n 0)  256)
+            (modulo (>> n 8)  256)
+            (modulo (>> n 16) 256)
+            (modulo (>> n 24) 256)))
 
     ;; Enhanced Packet Block
 
     (define (build-padding packet-length)
-      (let ((remaining-bytes (mod packet-length 4)))
+      (let ((remaining-bytes (modulo packet-length 4)))
         (cond ((eq? remaining-bytes 1) '(0 0 0))
               ((eq? remaining-bytes 2) '(0 0))
               ((eq? remaining-bytes 3) '(0))
@@ -59,7 +59,7 @@
 
     (define (parse-enhanced-block block)
       (let* ((packet-length (bytes->uint32 (pick 20 4 block)))
-             (padding-length (- 4 (mod packet-length 4)))
+             (padding-length (- 4 (modulo packet-length 4)))
              (packet-length-with-padding (+ packet-length padding-length))
              (options-length (- (length block) (+ 28 packet-length-with-padding 4))))
         (list (cons 'block-type               (pick 0  4 block))
