@@ -6,7 +6,8 @@
 
    (import 
       (owl base)
-      (rad shared))
+      (rad shared)
+      (rad pcapng))
 
    (export
       *patterns*
@@ -27,14 +28,18 @@
                      ;; stream more data
                      (loop rs this (ll) ip)
                      (lets ((rs n (rand rs ip)))
-                        (if (or (eq? n 0) (null? ll)) ;; mutation happens to occur, or last place for it
-                           (lets 
+                        (if (and (or (eq? n 0) (null? ll)) ;; mutation happens to occur, or last place for it
+                                 (or (not (eq? (getf meta 'generator) 'pcapng))
+                                     (pcapng-block-to-mutate? this)))
+                           (lets
                               ((ll (cons this ll))
                                (mutator rs ll meta (mutator rs ll meta)))
                               (cont ll rs mutator meta))
                            ;; keep moving
-                           (pair this
-                              (loop rs (car ll) (cdr ll) (+ ip 1)))))))
+                           (if (null? ll)
+                              (list this)
+                              (pair this
+                                 (loop rs (car ll) (cdr ll) (+ ip 1))))))))
                ;; no data to work on
                (cont null rs mutator meta))))
 
